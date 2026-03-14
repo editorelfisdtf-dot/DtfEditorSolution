@@ -313,3 +313,19 @@ function recalcularZoom() {
 window.addEventListener('resize', () => {
     ajustarLargoDinamico();
 });
+
+// Función para enviar el pedido
+function enviarPedido() {
+    const nombre = document.querySelector('input[placeholder="Tu Nombre"]').value;
+    const telefono = document.querySelector('input[placeholder="Tu Teléfono"]').value;
+    const precioText = document.getElementById('totalPrice').innerText;
+    const largoText = document.getElementById('totalLength').innerText;
+
+    if (!nombre || !telefono) {
+        alert('Por favor completa tu nombre y teléfono');
+        return;
+    }
+
+    const mensaje = `Pedido DTF:\nNombre: ${nombre}\nTeléfono: ${telefono}\n${largoText}\n${precioText}`;
+    alert(mensaje + '\n\n(Esta es una versión de demostración. En producción se enviaría a un servidor)');
+}
