@@ -149,7 +149,7 @@ input[type="file"] {
     background-color: #0b0e14;
     overflow: auto;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     padding: 20px;
     min-height: 0;
@@ -159,12 +159,12 @@ input[type="file"] {
 #wrapper {
     background-color: #1a1a1a;
     box-shadow: 0 0 40px rgba(0, 0, 0, 1);
-    margin: auto;
+    flex-shrink: 0;
 }
 
 canvas#canvasDTF {
     display: block;
-    margin: 0 auto;
+    margin: 0;
 }
 
 /* Evitamos que el zoom del navegador rompa el layout interno */
@@ -256,4 +256,76 @@ canvas#canvasDTF {
     color: #c1ff72 !important;
     font-size: 0.9rem !important;
     font-weight: bold;
+}
+
+/* --- HORIZONTAL RULER --- */
+.horizontal-ruler {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #c1ff72, transparent);
+    margin: 20px 0;
+}
+
+.horizontal-ruler:before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: #c1ff72;
+}
+
+/* --- FIX CANVAS WIDTH --- */
+canvas#canvasDTF {
+    width: 58cm !important;
+    height: auto !important;
+}
+
+/* --- RESPOSIVE DESIGN --- */
+@media (max-width: 768px) {
+    .header-text h1 {
+        font-size: 1.5rem;
+        margin-left: 100px;
+    }
+
+    .header-text p {
+        font-size: 0.8rem;
+        margin-left: 100px;
+    }
+
+    .controls {
+        width: 100%;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid #30363d;
+    }
+
+    .editor-container {
+        flex-direction: column;
+    }
+
+    .canvas-area {
+        padding: 10px;
+    }
+
+    .panel {
+        font-size: 0.65rem;
+    }
+
+    /* Ajustes para la fila de copias en móviles */
+    .copy-control-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    #inputCopies {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+
+    .btn-add-copy {
+        width: 100% !important;
+    }
 }
