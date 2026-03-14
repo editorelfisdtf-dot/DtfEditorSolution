@@ -154,17 +154,21 @@ input[type="file"] {
     padding: 20px;
     min-height: 0;
     min-width: 0;
+    width: 100%;
 }
 
 #wrapper {
     background-color: #1a1a1a;
     box-shadow: 0 0 40px rgba(0, 0, 0, 1);
     flex-shrink: 0;
+    display: block;
 }
 
 canvas#canvasDTF {
     display: block;
     margin: 0;
+    padding: 0;
+    border: none;
 }
 
 /* Evitamos que el zoom del navegador rompa el layout interno */

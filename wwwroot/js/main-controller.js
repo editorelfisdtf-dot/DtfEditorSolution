@@ -41,27 +41,27 @@ function initCanvas() {
             ctx.stroke();
         }
 
-        // REGLA HORIZONTAL (Superior) - Verde
+        // REGLA HORIZONTAL (Superior) - Verde - TAMAÑO REDUCIDO A LA MITAD
         ctx.fillStyle = "#c1ff72";
-        ctx.font = `${14 / zoom}px Arial`;
+        ctx.font = `${7 / zoom}px Arial`;
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         
         for (let x = 0; x <= window.canvas.width; x += ppi * 5) {
-            // Línea vertical pequeña en la parte superior
-            ctx.fillRect(x - (1 / zoom), 0, 2 / zoom, 20 / zoom);
-            // Texto con el valor en cm
-            ctx.fillText(`${Math.round(x / ppi)}cm`, x, 25 / zoom);
+            // Línea vertical pequeña en la parte superior (10px en lugar de 20px)
+            ctx.fillRect(x - (1 / zoom), 0, 2 / zoom, 10 / zoom);
+            // Texto con el valor en cm (más pequeño)
+            ctx.fillText(`${Math.round(x / ppi)}cm`, x, 12 / zoom);
         }
 
-        // REGLA VERTICAL (Izquierda) - Verde
+        // REGLA VERTICAL (Izquierda) - Verde - TAMAÑO REDUCIDO A LA MITAD
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
         for (let y = 0; y <= window.canvas.height; y += ppi * 5) {
-            // Línea horizontal pequeña en la parte izquierda
-            ctx.fillRect(0, y - (1 / zoom), 20 / zoom, 2 / zoom);
-            // Texto con el valor en cm
-            ctx.fillText(`${Math.round(y / ppi)}cm`, 15 / zoom, y);
+            // Línea horizontal pequeña en la parte izquierda (10px en lugar de 20px)
+            ctx.fillRect(0, y - (1 / zoom), 10 / zoom, 2 / zoom);
+            // Texto con el valor en cm (más pequeño)
+            ctx.fillText(`${Math.round(y / ppi)}cm`, 8 / zoom, y);
         }
 
         // MARGEN ROJO (Respetando superior e izquierdo)
@@ -258,12 +258,12 @@ function ajustarLargoDinamico() {
     const contenedor = document.querySelector('.canvas-area');
     if (!contenedor || !window.canvas) return;
 
-    const anchoInternoPx = anchoMesaCm * ppi; // 58cm en píxeles
+    const anchoInternoPx = anchoMesaCm * ppi; // 58cm = 2192 px
     
-    // Obtener ancho disponible (restamos padding)
-    const anchoDisponible = contenedor.clientWidth - 60;
+    // Obtener ancho disponible (restamos padding y márgenes)
+    const anchoDisponible = contenedor.clientWidth - 40; // 40px de padding
     
-    // El factor de zoom debe ser tal que 58cm quepa perfectamente
+    // Calcular factor de zoom para que 58cm quepa exactamente
     const factorZoom = anchoDisponible / anchoInternoPx;
 
     // Calcular altura basada en objetos
@@ -277,17 +277,17 @@ function ajustarLargoDinamico() {
 
     const alturaInternaPx = Math.max(100 * ppi, maxBottom + (15 * ppi));
 
-    // Aplicar zoom
+    // Aplicar zoom al canvas
     window.canvas.setZoom(factorZoom);
 
-    // Establecer dimensiones del canvas (ancho interno siempre 58cm)
+    // Establecer dimensiones visuales del canvas
     const anchoVisual = anchoInternoPx * factorZoom;
     const alturaVisual = alturaInternaPx * factorZoom;
 
     window.canvas.setWidth(anchoVisual);
     window.canvas.setHeight(alturaVisual);
 
-    // Ajustar wrapper para que tenga exactamente el tamaño del canvas
+    // Ajustar wrapper
     const wrapper = document.getElementById('wrapper');
     if (wrapper) {
         wrapper.style.width = anchoVisual + "px";
