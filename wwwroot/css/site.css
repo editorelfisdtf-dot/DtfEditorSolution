@@ -5,21 +5,22 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
-    overflow: auto !important; /* CAMBIO: Permitir scroll en la página */
+    overflow: hidden;
 }
 
 .app-root {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    width: 100vw;
 }
 
 /* --- CABECERA ESTILO ELFIS --- */
 .main-header {
     background-color: #0b0e14;
     padding: 15px 0;
-    /*border-bottom: 1px dashed #ff4444;*/ /* Línea roja de corte */
     width: 100%;
+    flex-shrink: 0;
 }
 
 .header-content {
@@ -31,9 +32,6 @@ body {
 }
 
 .header-logo {
-    /*    width: 70px;
-    height: auto;
-    margin-right: 20px;*/
     width: 72px;
     height: 72px;
     border-radius: 999px;
@@ -41,6 +39,7 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
     border: 2px solid rgba(148, 163, 184, 0.7);
     background: radial-gradient(circle at 30% 0, #22c55e, #16a34a 40%, #022c22 100%);
+    flex-shrink: 0;
 }
 
 .header-text h1 {
@@ -61,23 +60,25 @@ body {
 /* --- CONTENEDOR PRINCIPAL --- */
 .editor-container {
     display: flex;
-    height: 100vh;
-    width: 100vw;
+    flex: 1;
     overflow: hidden;
+    width: 100%;
 }
 
 /* --- PANEL LATERAL (CONTROLES) --- */
 .controls {
-    width: 280px; /* Ancho fijo para el panel */
+    width: 280px;
     min-width: 280px;
+    flex-shrink: 0;
     background-color: #161b22;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 20px;
     border-right: 1px solid #30363d;
 }
 
 .panel {
-    color: #c1ff72 !important; /* Restauramos el Verde Elfis */
+    color: #c1ff72 !important;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -86,17 +87,18 @@ body {
     padding-bottom: 5px;
 }
 
-    .panel h2 {
-        font-size: 0.7rem; /* Más pequeño */
-        margin-bottom: 10px;
-    }
+.panel h2 {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+    color: #c1ff72;
+}
 
 /* --- BOTONES MODERNOS --- */
 .controls button {
     width: 100%;
-    padding: 8px 12px !important; /* Un poco más de aire que el anterior */
+    padding: 8px 12px !important;
     margin-bottom: 6px !important;
-    border-radius: 6px !important; /* Bordes bien redondeados */
+    border-radius: 6px !important;
     border: 1px solid #ddd !important;
     background-color: #ffffff !important;
     color: #1a1a1a !important;
@@ -106,29 +108,31 @@ body {
     transition: all 0.2s ease !important;
 }
 
-    .controls button:hover {
-        background-color: #f0f0f0 !important;
-        transform: translateY(-1px);
-    }
+.controls button:hover {
+    background-color: #f0f0f0 !important;
+    transform: translateY(-1px);
+}
 
-    .controls button.danger {
-        background-color: #d90429 !important;
-        color: #ffffff !important;
-        border: none !important;
-    }
+.controls button.danger {
+    background-color: #d90429 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
 
-        .controls button.danger:hover {
-            background-color: #ef233c !important;
-        }
+.controls button.danger:hover {
+    background-color: #ef233c !important;
+}
 
-    .controls button.primary {
-        background-color: #238636 !important;
-        color: white !important;
-        border: none !important;
-    }
+.controls button.primary {
+    background-color: #238636 !important;
+    color: white !important;
+    border: none !important;
+}
 
 /* --- INPUTS --- */
-input[type="number"], input[type="text"], input[type="file"] {
+input[type="number"], 
+input[type="text"], 
+input[type="file"] {
     width: 100%;
     background-color: #161b22;
     border: 1px solid #30363d;
@@ -139,25 +143,35 @@ input[type="number"], input[type="text"], input[type="file"] {
     box-sizing: border-box;
 }
 
+/* --- CANVAS AREA --- */
 .canvas-area {
     flex: 1;
     background-color: #0b0e14;
-    overflow-y: auto !important; /* Habilita el scroll vertical */
-    overflow-x: hidden; /* Evita que se mueva hacia los lados */
+    overflow: auto;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
     padding: 20px;
+    min-height: 0;
+    min-width: 0;
 }
 
 #wrapper {
     background-color: #1a1a1a;
-    box-shadow: 0 0 40px rgba(0,0,0,1);
-    /* El tamaño lo define el JS */
+    box-shadow: 0 0 40px rgba(0, 0, 0, 1);
+    margin: auto;
 }
+
+canvas#canvasDTF {
+    display: block;
+    margin: 0 auto;
+}
+
 /* Evitamos que el zoom del navegador rompa el layout interno */
 .canvas-container {
-    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 }
+
 /* Contenedor de la fila de copias */
 .copy-control-row {
     display: flex !important;
@@ -168,19 +182,19 @@ input[type="number"], input[type="text"], input[type="file"] {
 
 /* Ajuste del input de copias */
 #inputCopies {
-    flex: 0 0 80px !important; /* Ancho fijo de 80px para el número */
+    flex: 0 0 80px !important;
     margin-bottom: 0 !important;
     text-align: center;
-    height: 42px !important; /* Altura igualada al botón */
+    height: 42px !important;
 }
 
 /* Ajuste del botón "+ Añadir" */
 .btn-add-copy {
-    flex: 1 !important; /* El botón ocupa el resto del espacio */
+    flex: 1 !important;
     margin-bottom: 0 !important;
-    padding: 0 15px !important; /* Reducimos el padding vertical */
+    padding: 0 15px !important;
     height: 42px !important;
-    white-space: nowrap; /* Evita que el texto se rompa en dos líneas */
+    white-space: nowrap !important;
 }
 
 #inputImage::-webkit-file-upload-button {
@@ -208,7 +222,7 @@ input[type="number"], input[type="text"], input[type="file"] {
 #inputImage:hover::before {
     background-color: #f0f0f0 !important;
     border-color: #bbb !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
     transform: translateY(-1px);
 }
 
@@ -216,26 +230,9 @@ input[type="number"], input[type="text"], input[type="file"] {
     background-color: #e5e5e5 !important;
 }
 
-/* Ajuste del contenedor del input para que no se vea el texto feo de "No se eligió archivo" */
 #inputImage {
-    color: transparent; /* Oculta el texto de "No file chosen" */
+    color: transparent;
     width: 100%;
-}
-
-.price-display {
-    padding: 10px !important;
-    margin-bottom: 10px !important;
-}
-
-#totalPrice {
-    font-size: 1.5rem !important; /* Precio más pequeño */
-    margin: 5px 0;
-}
-
-#totalLength {
-    color: #c1ff72 !important;
-    font-size: 0.9rem !important;
-    font-weight: bold;
 }
 
 .price-display {
@@ -243,7 +240,7 @@ input[type="number"], input[type="text"], input[type="file"] {
     padding: 20px !important;
     border-radius: 12px !important;
     margin-bottom: 20px !important;
-    border: 2px solid #c1ff72 !important; /* El verde neón de tu marca */
+    border: 2px solid #c1ff72 !important;
     text-align: center;
     box-shadow: 0 4px 15px rgba(193, 255, 114, 0.1);
 }
@@ -252,7 +249,7 @@ input[type="number"], input[type="text"], input[type="file"] {
     color: #ffffff !important;
     font-size: 2.4rem !important;
     margin: 10px 0;
-    font-family: 'Courier New', Courier, monospace; /* Toque técnico de impresión */
+    font-family: 'Courier New', Courier, monospace;
 }
 
 #totalLength {

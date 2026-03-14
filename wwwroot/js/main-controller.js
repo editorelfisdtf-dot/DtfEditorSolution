@@ -5,6 +5,8 @@ let precioPorMetro = 10000;
 window.addEventListener('load', () => {
     initCanvas();
     cargarConfiguracion();
+    setupPropertyListeners();
+    ajustarLargoDinamico();
 });
 
 function initCanvas() {
@@ -12,7 +14,8 @@ function initCanvas() {
         width: 58 * 37.795,
         height: 100 * 37.795,
         backgroundColor: '#1a1a1a',
-        selection: true
+        selection: true,
+        renderOnAddRemove: false
     });
 
     window.canvas.on('after:render', function () {
@@ -71,6 +74,7 @@ function handleImageUpload(e) {
                 window.canvas.add(img);
                 window.canvas.setActiveObject(img);
                 window.canvas.renderAll();
+                actualizarPrecio();
             });
         };
         reader.readAsDataURL(file);
@@ -95,6 +99,8 @@ function eliminarSeleccion() {
     } else {
         window.canvas.remove(active);
     }
+    window.canvas.renderAll();
+    actualizarPrecio();
 }
 
 function generarCopias() {
@@ -111,11 +117,15 @@ function generarCopias() {
             window.canvas.add(cloned);
         });
     }
+    window.canvas.renderAll();
+    actualizarPrecio();
 }
 
 function limpiarMesa() {
     if (confirm("¿Seguro que quieres borrar todo?")) {
         window.canvas.getObjects('image').forEach(obj => window.canvas.remove(obj));
+        window.canvas.renderAll();
+        actualizarPrecio();
     }
 }
 
@@ -145,24 +155,21 @@ function actualizarPrecio() {
     document.getElementById('totalPrice').innerText = `$${Math.round(precioTotal).toLocaleString('es-CL')}`;
     document.getElementById('totalLength').innerText = `Largo ocupado: ${largoCm.toFixed(1)} cm`;
 }
-// Reemplaza la función cambiarModo en main-controller.js
+
 function cambiarModo(modo) {
     const objetos = window.canvas.getObjects('image');
     if (objetos.length === 0) return;
 
     if (modo === 'avanzado') {
-        // 1. Antes de ordenar, movemos todo al inicio para que el motor recalcule desde arriba
         objetos.forEach(obj => {
             obj.set({ top: 0, left: 0 });
         });
 
         if (typeof AdvancedPacker !== 'undefined') {
-            // Le pasamos un largo virtual muy grande (ej. 1000cm) para que no se sobrepongan
             AdvancedPacker.optimize(window.canvas, anchoMesaCm, 1000);
         }
     }
 
-    // 2. Ajustar el largo del canvas al objeto que quedó más abajo
     ajustarLargoCanvasEfectivo();
     window.canvas.renderAll();
 }
@@ -176,29 +183,25 @@ function ajustarLargoCanvasEfectivo() {
         if (bottom > maxBottom) maxBottom = bottom;
     });
 
-    // Añadimos un pequeño margen extra al final (2cm)
     const nuevoLargoPx = Math.max(100 * ppi, maxBottom + (2 * ppi));
-
-    // Actualizamos el ancho y largo visual considerando el zoom actual
     const zoom = window.canvas.getZoom();
-    window.canvas.setHeight(nuevoLargoPx * zoom);
-
-    // Importante: Actualizar la propiedad interna para que la grilla se siga dibujando
+    
+    window.canvas.setHeight(nuevoLargoPx);
     window.canvas.height = nuevoLargoPx;
 
     actualizarPrecio();
 }
+
 function setupPropertyListeners() {
-    // Cuando el usuario escala la imagen con el mouse, el input se actualiza
+    if (!window.canvas) return;
+    
     window.canvas.on('object:scaling', function (e) {
         actualizarInputAncho(e.target);
     });
 
-    // Cuando el usuario hace clic en una imagen, el input muestra su ancho
     window.canvas.on('selection:created', (e) => actualizarInputAncho(e.selected[0]));
     window.canvas.on('selection:updated', (e) => actualizarInputAncho(e.selected[0]));
 
-    // Si se deselecciona, limpiamos el input
     window.canvas.on('selection:cleared', () => {
         document.getElementById('inputWidthCm').value = '';
     });
@@ -207,7 +210,6 @@ function setupPropertyListeners() {
 function actualizarInputAncho(obj) {
     const inputWidth = document.getElementById('inputWidthCm');
     if (inputWidth && obj) {
-        // Calculamos el ancho real considerando la escala actual
         const anchoActualCm = (obj.getScaledWidth() / ppi).toFixed(1);
         inputWidth.value = anchoActualCm;
     }
@@ -223,20 +225,27 @@ function cambiarAnchoManual() {
     if (isNaN(nuevoAnchoCm) || nuevoAnchoCm <= 0) return;
 
     const nuevoAnchoPx = nuevoAnchoCm * ppi;
-
-    // Cambiamos el ancho manteniendo la proporción (scaleToWidth)
     activeObject.scaleToWidth(nuevoAnchoPx);
-
-    activeObject.setCoords(); // Importante para que los controles sigan a la imagen
+    activeObject.setCoords();
+    
     window.canvas.renderAll();
-    actualizarPrecio(); // El precio cambia si la imagen ocupa más espacio
+    actualizarPrecio();
 }
-// Agrega esta función a tu main-controller.js si no la tienes
-function ajustarLargoDinamico() {
-    const ppi = 37.795;
-    const anchoMesaCm = 58;
-    const objects = window.canvas.getObjects('image');
 
+function ajustarLargoDinamico() {
+    const contenedor = document.querySelector('.canvas-area');
+    if (!contenedor) return;
+
+    const anchoInternoPx = anchoMesaCm * ppi;
+    
+    // Obtener ancho disponible sin padding
+    const anchoDisponible = contenedor.clientWidth - 40;
+    const factorZoom = Math.min(anchoDisponible / anchoInternoPx, 1);
+
+    if (!window.canvas) return;
+
+    // Calcular altura basada en objetos
+    const objects = window.canvas.getObjects('image');
     let maxBottom = 0;
     objects.forEach(obj => {
         const rect = obj.getBoundingRect();
@@ -244,43 +253,26 @@ function ajustarLargoDinamico() {
         if (bottom > maxBottom) maxBottom = bottom;
     });
 
-    // 1. Dimensiones internas (Resolución real de 58cm)
-    const anchoInternoPx = anchoMesaCm * ppi;
     const alturaInternaPx = Math.max(100 * ppi, maxBottom + (15 * ppi));
 
-    // 2. Cálculo del factor de zoom según tu pantalla
-    const contenedor = document.querySelector('.canvas-area');
-    const anchoDisponible = contenedor.clientWidth - 60;
-    const factorZoom = anchoDisponible / anchoInternoPx;
-
-    // 3. Aplicamos el zoom interno
+    // Aplicar zoom
     window.canvas.setZoom(factorZoom);
 
-    // 4. Ajustamos el tamaño VISUAL (CSS) sin alterar la grilla interna
-    window.canvas.setDimensions({
-        width: anchoInternoPx * factorZoom,
-        height: alturaInternaPx * factorZoom
-    }, { cssOnly: true });
+    // Establecer dimensiones del canvas
+    const anchoVisual = anchoInternoPx * factorZoom;
+    const alturaVisual = alturaInternaPx * factorZoom;
 
-    // 5. Forzamos al Wrapper para que el navegador cree la barra de scroll
+    window.canvas.setWidth(anchoVisual);
+    window.canvas.setHeight(alturaVisual);
+
+    // Ajustar wrapper
     const wrapper = document.getElementById('wrapper');
     if (wrapper) {
-        wrapper.style.width = (anchoInternoPx * factorZoom) + "px";
-        wrapper.style.height = (alturaInternaPx * factorZoom) + "px";
+        wrapper.style.width = anchoVisual + "px";
+        wrapper.style.height = alturaVisual + "px";
     }
 
     window.canvas.renderAll();
-    actualizarPrecio();
-}
-function recalcularZoomYVista() {
-    const contenedor = document.querySelector('.canvas-area');
-    const anchoDisponible = contenedor.clientWidth - 40;
-    const anchoRealCanvas = 58 * 37.795;
-    const factorZoom = anchoDisponible / anchoRealCanvas;
-
-    window.canvas.setZoom(factorZoom);
-    window.canvas.setWidth(anchoRealCanvas * factorZoom);
-    window.canvas.setHeight(window.canvas.height * factorZoom);
 }
 
 function recalcularZoom() {
@@ -291,17 +283,11 @@ function recalcularZoom() {
     const anchoRealCanvas = 58 * 37.795;
     const factorZoom = anchoDisponible / anchoRealCanvas;
 
-    // Aplicamos el zoom sin cambiar el ancho interno (el ancho siempre es 58cm)
     window.canvas.setZoom(factorZoom);
-
-    // Ajustamos el tamaño del elemento HTML del canvas para que coincida visualmente
     window.canvas.setWidth(anchoRealCanvas * factorZoom);
     window.canvas.setHeight(window.canvas.height * factorZoom);
 }
-// Forzar el ajuste cuando la ventana cambia de tamaño
+
 window.addEventListener('resize', () => {
     ajustarLargoDinamico();
 });
-
-// Forzar el ajuste un segundo después de cargar (por si el panel tarda en renderizar)
-setTimeout(ajustarLargoDinamico, 500);
