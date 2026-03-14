@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor DTF - Elfis</title>
+    <link rel="stylesheet" href="css/site.css?v=1.2">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+</head>
+<body>
+    <div class="app-root">
+        <header class="main-header">
+            <div class="header-content">
+                <img src="logo.png" alt="Elfis DTF Logo" class="header-logo">
+                <div class="header-text">
+                    <h1>Editor DTF</h1>
+                    <p>Sube tus diseños, ajusta su tamaño y genera la mesa optimizada para impresión.</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="editor-container">
+            <aside class="controls">
+
+                <section class="panel">
+                    <h2>1. Subir Diseños</h2>
+                    <input type="file" id="inputImage" accept="image/png" multiple onchange="handleImageUpload(event)">
+                </section>
+
+                <section class="panel">
+                    <h2>2. Optimización</h2>
+                    <div class="control-group">
+                        <button class="btn-opt" onclick="cambiarModo('avanzado')">Ordenar automático</button>
+                    </div>
+                </section>
+
+                <section class="panel" id="manualControls">
+                    <h2>3. Ajuste Manual</h2>
+                    <div class="grid-buttons">
+                        <button onclick="rotarSeleccion(90)">Rotar 90°</button>
+                        <button onclick="eliminarSeleccion()" class="danger">Eliminar</button>
+
+                        <div class="input-group" style="margin-top:10px;">
+                            <label style="color: #8b949e; font-size: 0.8rem; display: block; margin-bottom: 5px;">Añadir Copias:</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="number" id="inputCopies" value="1" min="1" style="flex: 1; margin-bottom: 0;">
+                                <button onclick="generarCopias()" style="width: auto; margin-bottom: 0;">+ Añadir</button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 5px; margin-top: 10px;">
+                            <button onclick="rotarSeleccion(-15)" style="flex: 1;">Rotar -15°</button>
+                            <button onclick="rotarSeleccion(15)" style="flex: 1;">Rotar 15°</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel" id="propertyPanel">
+                    <h2>4. Propiedades del Diseño</h2>
+                    <div class="input-group">
+                        <label>Ancho (cm):</label>
+                        <input type="number" id="inputWidthCm" step="0.1" oninput="cambiarAnchoManual()" placeholder="Ej: 20">
+                    </div>
+
+                    <button class="danger" onclick="limpiarMesa()" style="margin-top: 15px;">
+                        Limpiar Mesa Completa
+                    </button>
+                </section>
+
+                <section class="panel">
+                    <h2>5. Resumen y Finalizar</h2>
+                    <div class="price-display" style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #c1ff72;">
+                        <span style="color: #8b949e; font-size: 0.8rem; text-transform: uppercase;">Total Estimado:</span>
+                        <div id="totalPrice" style="color: #c1ff72; font-size: 2rem; font-weight: bold;">$0.00</div>
+                        <p id="totalLength" style="color: #a0a0a0; font-size: 0.8rem; margin: 5px 0 0 0;">Largo ocupado: 0 cm</p>
+                    </div>
+
+                    <div class="footer-form">
+                        <input type="text" placeholder="Tu Nombre">
+                        <input type="text" placeholder="Tu Teléfono">
+                        <button class="primary" onclick="enviarPedido()">Enviar Pedido</button>
+                    </div>
+                </section>
+            </aside>
+
+            <div class="canvas-area">
+                <div id="wrapper">
+                    <canvas id="canvasDTF"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <script src="js/collision-engine.js"></script>
+        <script src="js/packing-basic.js"></script>
+        <script src="js/packing-advanced.js"></script>
+        <script src="js/main-controller.js"></script>
+    </div>
+</body>
+</html>

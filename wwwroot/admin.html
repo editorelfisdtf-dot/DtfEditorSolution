@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin precio - Editor DTF</title>
+  <link rel="stylesheet" href="css/site.css" />
+</head>
+<body class="admin-body">
+  <div class="panel admin-panel">
+    <h2>Configuración de precio</h2>
+    <p>Solo personal autorizado.</p>
+
+    <label>
+      Precio por metro ($):
+      <input type="number" id="adminPrice" min="0" />
+    </label>
+
+    <label>
+      Contraseña:
+      <input type="password" id="adminPassword" />
+    </label>
+
+    <div class="config-actions">
+      <button class="primary" id="saveConfigBtn">Guardar</button>
+      <a href="/" class="secondary-link-btn">Volver al editor</a>
+    </div>
+
+    <p id="adminMessage" class="info"></p>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
