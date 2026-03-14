@@ -277,13 +277,7 @@ canvas#canvasDTF {
     background: #c1ff72;
 }
 
-/* --- FIX CANVAS WIDTH --- */
-canvas#canvasDTF {
-    width: 58cm !important;
-    height: auto !important;
-}
-
-/* --- RESPOSIVE DESIGN --- */
+/* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
     .header-text h1 {
         font-size: 1.5rem;
