@@ -154,19 +154,57 @@ function eliminarSeleccion() {
 function generarCopias() {
     const obj = window.canvas.getActiveObject();
     const num = parseInt(document.getElementById('inputCopies').value);
-    if (!obj || isNaN(num)) return;
+    if (!obj || isNaN(num) || num <= 0) return;
+
+    let added = 0;
+    const clones = [];
 
     for (let i = 0; i < num; i++) {
+        // clone es asíncrono
         obj.clone(function (cloned) {
+            // asegurar que la copia mantiene rotación y origen
             cloned.set({
-                left: obj.left + (10 * (i + 1)),
-                top: obj.top + (10 * (i + 1))
+                originX: 'center',
+                originY: 'center',
+                angle: obj.angle || 0
             });
+
+            // colocar provisionalmente cerca del original para visualización inmediata
+            const offset = 10 * (i + 1);
+            // usar coords lógicas (centro) si el objeto original usa center
+            try {
+                const center = obj.getCenterPoint();
+                cloned.set({ left: center.x + offset, top: center.y + offset });
+            } catch (e) {
+                cloned.set({ left: obj.left + offset, top: obj.top + offset });
+            }
+
+            cloned.setCoords();
             window.canvas.add(cloned);
+            clones.push(cloned);
+            added++;
+
+            // cuando todas las copias se han añadido, reordenar y renderizar
+            if (added === num) {
+                // Intentar usar el packer básico para ordenar respetando márgenes
+                try {
+                    if (typeof BasicPacker !== 'undefined' && typeof BasicPacker.pack === 'function') {
+                        BasicPacker.pack(window.canvas, anchoMesaCm);
+                    }
+                } catch (e) {
+                    console.warn('BasicPacker pack failed', e);
+                }
+
+                window.canvas.renderAll();
+                actualizarPrecio();
+
+                // seleccionar la última copia añadida
+                if (clones.length) {
+                    window.canvas.setActiveObject(clones[clones.length - 1]);
+                }
+            }
         });
     }
-    window.canvas.renderAll();
-    actualizarPrecio();
 }
 
 function limpiarMesa() {
