@@ -22,53 +22,57 @@ function initCanvas() {
         const ctx = window.canvas.getContext();
         const zoom = window.canvas.getZoom();
         const ppi = 37.795;
+        
+        // Calculamos el tamaño lógico (sin zoom) para abarcar correctamente toda el área virtual
+        const logicalWidth = Math.max(window.canvas.width / zoom, 58 * ppi);
+        const logicalHeight = Math.max(window.canvas.height / zoom, 100 * ppi);
 
         ctx.save();
+        
+        // TRUCO: Escalar el contexto hacia el zoom precalado, de este modo 
+        // nuestras mediciones lógicos cuadran a la perfección con la visual y no se recortan en 45cm 
+        ctx.scale(zoom, zoom);
         
         // Líneas de grilla
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.lineWidth = 1 / zoom;
-        for (let x = 0; x <= window.canvas.width; x += ppi) {
+        for (let x = 0; x <= logicalWidth; x += ppi) {
             ctx.beginPath(); 
             ctx.moveTo(x, 0); 
-            ctx.lineTo(x, window.canvas.height); 
+            ctx.lineTo(x, logicalHeight); 
             ctx.stroke();
         }
-        for (let y = 0; y <= window.canvas.height; y += ppi) {
+        for (let y = 0; y <= logicalHeight; y += ppi) {
             ctx.beginPath(); 
             ctx.moveTo(0, y); 
-            ctx.lineTo(window.canvas.width, y); 
+            ctx.lineTo(logicalWidth, y); 
             ctx.stroke();
         }
 
-        // REGLA HORIZONTAL (Superior) - Verde - TAMAÑO REDUCIDO A LA MITAD
+        // REGLA HORIZONTAL (Superior) - Verde
         ctx.fillStyle = "#c1ff72";
-        ctx.font = `${7 / zoom}px Arial`;
+        ctx.font = `${11 / zoom}px Arial`;
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         
-        for (let x = 0; x <= window.canvas.width; x += ppi * 5) {
-            // Línea vertical pequeña en la parte superior (10px en lugar de 20px)
-            ctx.fillRect(x - (1 / zoom), 0, 2 / zoom, 10 / zoom);
-            // Texto con el valor en cm (más pequeño)
-            ctx.fillText(`${Math.round(x / ppi)}cm`, x, 12 / zoom);
+        for (let x = 0; x <= logicalWidth; x += ppi * 5) {
+            ctx.fillRect(x - (1 / zoom), 0, 2 / zoom, 15 / zoom);
+            ctx.fillText(`${Math.round(x / ppi)}`, x, 18 / zoom);
         }
 
-        // REGLA VERTICAL (Izquierda) - Verde - TAMAÑO REDUCIDO A LA MITAD
+        // REGLA VERTICAL (Izquierda) - Verde
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
-        for (let y = 0; y <= window.canvas.height; y += ppi * 5) {
-            // Línea horizontal pequeña en la parte izquierda (10px en lugar de 20px)
-            ctx.fillRect(0, y - (1 / zoom), 10 / zoom, 2 / zoom);
-            // Texto con el valor en cm (más pequeño)
-            ctx.fillText(`${Math.round(y / ppi)}cm`, 8 / zoom, y);
+        for (let y = 0; y <= logicalHeight; y += ppi * 5) {
+            ctx.fillRect(0, y - (1 / zoom), 15 / zoom, 2 / zoom);
+            ctx.fillText(`${Math.round(y / ppi)}`, 20 / zoom, y);
         }
 
         // MARGEN ROJO (Respetando superior e izquierdo)
         ctx.setLineDash([10 / zoom, 5 / zoom]);
         ctx.strokeStyle = '#ff4444';
         ctx.lineWidth = 2 / zoom;
-        ctx.strokeRect(ppi, ppi, (58 * ppi) - (ppi * 2), window.canvas.height - (ppi * 2));
+        ctx.strokeRect(ppi, ppi, (58 * ppi) - (ppi * 2), logicalHeight - (ppi * 2));
 
         ctx.restore();
     });
@@ -166,9 +170,22 @@ async function cargarConfiguracion() {
 function actualizarPrecio() {
     const objects = window.canvas.getObjects('image');
     let maxBottom = 0;
+
     objects.forEach(obj => {
-        const bottom = obj.getBoundingRect().top + obj.getBoundingRect().height;
-        if (bottom > maxBottom) maxBottom = bottom;
+        try {
+            // Asegurarse coords actualizadas
+            obj.setCoords();
+            // aCoords contiene las esquinas reales en coordenadas del canvas (sin zoom)
+            const ac = obj.aCoords;
+            const ys = [ac.tl.y, ac.tr.y, ac.bl.y, ac.br.y];
+            const bottom = Math.max(...ys);
+            if (bottom > maxBottom) maxBottom = bottom;
+        } catch (e) {
+            // fallback: usar bounding rect (lógico)
+            const rect = obj.getBoundingRect(true);
+            const bottom = rect.top + rect.height;
+            if (bottom > maxBottom) maxBottom = bottom;
+        }
     });
 
     const largoCm = maxBottom / ppi;
@@ -201,13 +218,20 @@ function ajustarLargoCanvasEfectivo() {
     let maxBottom = 0;
 
     objects.forEach(obj => {
-        const bottom = obj.getBoundingRect().top + obj.getBoundingRect().height;
-        if (bottom > maxBottom) maxBottom = bottom;
+        try {
+            obj.setCoords();
+            const ac = obj.aCoords;
+            const ys = [ac.tl.y, ac.tr.y, ac.bl.y, ac.br.y];
+            const bottom = Math.max(...ys);
+            if (bottom > maxBottom) maxBottom = bottom;
+        } catch (e) {
+            const rect = obj.getBoundingRect(true);
+            const bottom = rect.top + rect.height;
+            if (bottom > maxBottom) maxBottom = bottom;
+        }
     });
 
     const nuevoLargoPx = Math.max(100 * ppi, maxBottom + (2 * ppi));
-    const zoom = window.canvas.getZoom();
-    
     window.canvas.setHeight(nuevoLargoPx);
     window.canvas.height = nuevoLargoPx;
 
@@ -259,20 +283,24 @@ function ajustarLargoDinamico() {
     if (!contenedor || !window.canvas) return;
 
     const anchoInternoPx = anchoMesaCm * ppi; // 58cm = 2192 px
-    
-    // Obtener ancho disponible (restamos padding y márgenes)
     const anchoDisponible = contenedor.clientWidth - 40; // 40px de padding
-    
-    // Calcular factor de zoom para que 58cm quepa exactamente
     const factorZoom = anchoDisponible / anchoInternoPx;
 
-    // Calcular altura basada en objetos
+    // Calcular altura basada en objetos usando aCoords
     const objects = window.canvas.getObjects('image');
     let maxBottom = 0;
     objects.forEach(obj => {
-        const rect = obj.getBoundingRect();
-        const bottom = rect.top + rect.height;
-        if (bottom > maxBottom) maxBottom = bottom;
+        try {
+            obj.setCoords();
+            const ac = obj.aCoords;
+            const ys = [ac.tl.y, ac.tr.y, ac.bl.y, ac.br.y];
+            const bottom = Math.max(...ys);
+            if (bottom > maxBottom) maxBottom = bottom;
+        } catch (e) {
+            const rect = obj.getBoundingRect(true);
+            const bottom = rect.top + rect.height;
+            if (bottom > maxBottom) maxBottom = bottom;
+        }
     });
 
     const alturaInternaPx = Math.max(100 * ppi, maxBottom + (15 * ppi));
@@ -287,7 +315,6 @@ function ajustarLargoDinamico() {
     window.canvas.setWidth(anchoVisual);
     window.canvas.setHeight(alturaVisual);
 
-    // Ajustar wrapper
     const wrapper = document.getElementById('wrapper');
     if (wrapper) {
         wrapper.style.width = anchoVisual + "px";

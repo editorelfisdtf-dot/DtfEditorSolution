@@ -15,6 +15,10 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
+// --- MIDDLEWARE DE ARCHIVOS ESTÁTICOS (DEBE IR ANTES DE LOS ENDPOINTS) ---
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // --- 2. Configuración de Directorios ---
 var dataDir = Path.Combine(app.Environment.ContentRootPath, "data");
 var tempDir = Path.Combine(app.Environment.ContentRootPath, "temp_uploads");
@@ -100,8 +104,6 @@ app.MapPost("/upload", async (UploadRequest request) =>
     }
 });
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
 app.Run();
 
 // Estructura de datos para recibir el pedido
