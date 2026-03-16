@@ -64,8 +64,30 @@ function initCanvas() {
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
         for (let y = 0; y <= logicalHeight; y += ppi * 5) {
-            ctx.fillRect(0, y - (1 / zoom), 15 / zoom, 2 / zoom);
-            ctx.fillText(`${Math.round(y / ppi)}`, 20 / zoom, y);
+            // Línea horizontal pequeña en la parte izquierda (10px en lugar de 20px)
+            const tickW = 12 / zoom;
+            ctx.fillRect(0, y - (1 / zoom), tickW, 2 / zoom);
+
+            // Dibujar fondo oscuro detrás del número para que no se solape con líneas verdes
+            const label = `${Math.round(y / ppi)}`;
+            ctx.save();
+            ctx.font = `${11 / zoom}px Arial`;
+            const textMetrics = ctx.measureText(label);
+            const padding = 4 / zoom;
+            const bgW = textMetrics.width + padding * 2;
+            const bgH = 14 / zoom;
+            const bgX = tickW + 2 / zoom; // colocar el fondo a la derecha del tick
+            const bgY = y - (bgH / 2);
+
+            // Fondo oscuro
+            ctx.fillStyle = '#0b0e14';
+            ctx.fillRect(bgX, bgY, bgW, bgH);
+
+            // Texto en verde, ligeramente desplazado dentro del fondo para evitar solape
+            ctx.fillStyle = '#c1ff72';
+            ctx.textAlign = 'left';
+            ctx.fillText(label, bgX + padding, y);
+            ctx.restore();
         }
 
         // MARGEN ROJO (Respetando superior e izquierdo)
